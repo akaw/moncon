@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0,user-scalable=no"
+    />
+    <title>NeowiseMonCon</title>
+    <style>
+      html {
+        height: -webkit-fill-available;
+      }
+      body {
+        min-height: 100vh;
+        /* mobile viewport bug fix */
+        min-height: -webkit-fill-available;
+        background-color: black;
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        font-family: Helvetica, sans-serif;
+        margin: 0;
+        padding: 0;
+        font-size: 16px;
+        height: calc(var(--vh, 1vh) * 100);
+        display: flex;
+        flex-flow: row wrap;
+      }
+      .button,
+      .button:active,
+      .button:focus {
+        flex-grow: 1;
+        box-sizing: border-box;
+        border-radius: 0rem;
+        background-color: #3498db;
+        border: 1px solid black;
+        color: white;
+        text-decoration: none;
+        font-size: 1rem;
+        cursor: pointer;
+        margin: 0;
+        padding: 0;
+        flex-basis: 33%;
+      }
+
+      .button-on {
+        background-color: #3498db;
+      }
+      .button-on:active {
+        background-color: #2980b9;
+      }
+      .button-off {
+        background-color: #34495e;
+      }
+      .button-off:active {
+        background-color: #2c3e50;
+      }
+      @media only screen and (max-width: 480px) {
+        /* For mobile phones: */
+        .button,
+        .button:active,
+        .button:focus {
+          font-size: 1rem;
+          flex-basis: 50%;
+        }
+      }
+      @media only screen and (min-width: 768px) {
+        /* For mobile phones: */
+        .button,
+        .button:active,
+        .button:focus {
+          font-size: 2rem;
+        }
+      }      
+      @media only screen and (min-width: 1024px) {
+        /* For mobile phones: */
+        .button,
+        .button:active,
+        .button:focus {
+          font-size: 3rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <button
+        type="button"
+        id="button-0"
+        data-buttonId="0"
+        class="button button-off"
+      >
+        Input B
+      </button>
+      <button
+        type="button"
+        id="button-1"
+        data-buttonId="1"
+        class="button button-off"
+      >
+        Input C
+      </button>
+      <button
+        type="button"
+        id="button-2"
+        data-buttonId="2"
+        class="button button-off"
+      >
+        Bluetooth
+      </button>
+      <button
+        type="button"
+        id="button-3"
+        data-buttonId="3"
+        class="button button-off"
+      >
+        Output B
+      </button>
+
+      <button
+        type="button"
+        id="button-4"
+        data-buttonId="4"
+        class="button button-off"
+      >
+        Output C
+      </button>
+      <button
+        type="button"
+        id="button-10"
+        data-buttonId="10"
+        class="button button-off"
+      >
+        A/B
+      </button>
+      <button
+        type="button"
+        id="button-7"
+        data-buttonId="7"
+        class="button button-off"
+      >
+        Dim
+      </button>
+      <button
+        type="button"
+        id="button-8"
+        data-buttonId="8"
+        class="button button-off"
+      >
+        Mix
+      </button>
+      <button
+        type="button"
+        id="button-9"
+        data-buttonId="9"
+        class="button button-off"
+      >
+        Loud
+      </button>
+      <button
+        type="button"
+        id="button-6"
+        data-buttonId="6"
+        class="button button-off"
+      >
+        Mute
+      </button>
+      <button
+        type="button"
+        id="button-5"
+        data-buttonId="5"
+        class="button button-off"
+      >
+        Talkback
+      </button>
+    </div>
+    <script type="text/javascript">
+      var buttons = document.getElementsByClassName("button");
+      for (var i = 0; i < buttons.length; i++) {
+        buttons[i].addEventListener("click", pushButton, false);
+      }
+
+      function pushButton() {
+        id = this.getAttribute("data-buttonId");
+        var xhttpPushButton = new XMLHttpRequest();
+        xhttpPushButton.onreadystatechange = function () {
+          if (this.readyState == 4 && this.status == 200) {
+            setState("button-" + id, this.responseText);
+          }
+        };
+        xhttpPushButton.open("GET", "/button/" + id, true);
+        xhttpPushButton.send();
+        setStates();
+      }
+
+      function setStates() {
+        var xhttpSetStates = new XMLHttpRequest();
+        xhttpSetStates.onreadystatechange = function () {
+          if (this.readyState == 4 && this.status == 200) {
+            var jsonData = JSON.parse(this.responseText);
+            if (jsonData) {
+              for (var i = 0; i < jsonData.length; i++) {
+                setState(jsonData[i].id, jsonData[i].value);
+              }
+            }
+          }
+        };
+        xhttpSetStates.open("GET", "/get/states", true);
+        xhttpSetStates.send();
+      }
+
+      function setState(id, value) {
+        var element = document.getElementById(id);
+        element.classList.remove("button-on");
+        element.classList.remove("button-off");
+        if (value == 1) {
+          element.classList.add("button-on");
+        } else {
+          element.classList.add("button-off");
+        }
+      }
+      setStates();
+      setInterval(function ( ) {
+        setStates();
+      }, 1000 ) ;
+      function setDocHeight() {
+        document.documentElement.style.setProperty(
+          "--vh",
+          `${window.innerHeight / 100}px`
+        );
+      }
+      window.addEventListener("resize", setDocHeight);
+      window.addEventListener("orientationchange", setDocHeight);
+      setDocHeight();
+    </script>
+  </body>
+</html>
